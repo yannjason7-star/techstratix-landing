@@ -81,31 +81,52 @@ export default function TechStraTixLanding() {
   };
 
   // ENVOI SUPABASE CORRIGÉ
-  const handleSuccess = async () => {
-    console.log("Tentative d'envoi des données...");
+ const handleSuccess = async () => {
+  console.log("🚀 Lancement de la procédure d'inscription...");
 
-    const { data, error } = await supabase
+  try {
+    // 1. Préparation des données
+    const payload = {
+      nom: formData.nom,
+      whatsapp: `+${countryObj.phonecode}${formData.whatsapp}`,
+      email: formData.email || "Non renseigné",
+      pays: formData.pays,
+      ville: formData.ville
+    };
+
+    // 2. Enregistrement dans Supabase
+    const { error: supabaseError } = await supabase
       .from('leads')
-      .insert([
-        { 
-          nom: formData.nom, 
-          // Utilisation de countryObj pour récupérer le code pays correct
-          whatsapp: `+${countryObj.phonecode}${formData.whatsapp}`, 
-          email: formData.email || null, 
-          pays: formData.pays, 
-          ville: formData.ville 
-        }
-      ])
-      .select();
+      .insert([payload]);
 
-    if (error) {
-      console.error("❌ ERREUR SUPABASE :", error.message);
-      alert("Erreur de connexion : " + error.message);
+    if (supabaseError) throw new Error("Erreur Supabase: " + supabaseError.message);
+    
+    console.log("✅ Données enregistrées dans Supabase.");
+
+    // 3. ENVOI DU MAIL D'ALERTE (Via ta route API Resend)
+    // On ne bloque pas l'utilisateur si le mail échoue, on utilise un fetch silencieux
+    const mailResponse = await fetch('/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const mailResult = await mailResponse.json();
+    
+    if (mailResult.success) {
+      console.log("✅ Alerte email envoyée avec succès !");
     } else {
-      console.log("✅ RÉUSSITE :", data);
-      alert("Félicitations ! Votre accès Beta TechStraTix est réservé.");
+      console.error("❌ Échec de l'envoi du mail :", mailResult.error);
     }
-  };
+
+    // 4. Message de succès final à l'utilisateur
+    alert("Félicitations Yann ! Ton accès Beta TechStraTix est réservé. Prépare ton envol digital.");
+
+  } catch (error: any) {
+    console.error("❌ Erreur générale :", error.message);
+    alert("Désolé, une erreur est survenue. Vérifie ta connexion.");
+  }
+};
 
   return (
     <div className="bg-[#000D1A] min-h-screen text-white">

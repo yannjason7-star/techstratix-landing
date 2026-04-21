@@ -120,7 +120,7 @@ export default function TechStraTixLanding() {
     }
 
     // 4. Message de succès final à l'utilisateur
-    alert("Félicitations Yann ! Ton accès Beta TechStraTix est réservé. Prépare ton envol digital.");
+  alert(`Félicitations ${formData.nom} ! Ton accès Beta TechStraTix est réservé. `);
 
   } catch (error: any) {
     console.error("❌ Erreur générale :", error.message);
